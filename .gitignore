@@ -1,0 +1,4 @@
+go.sum
+go.mod
+local.env
+pkg
