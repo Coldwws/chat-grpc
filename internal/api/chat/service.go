@@ -5,13 +5,13 @@ import (
 	desc "github.com/Coldwws/chat_practice/pkg/chat_v1"
 )
 
-type server struct {
+type Server struct {
 	chatService service.ChatService
 	desc.UnimplementedChatV1Server
 }
 
-func NewChatServer(chatService service.ChatService) *server {
-	return &server{
+func NewChatServer(chatService service.ChatService) *Server {
+	return &Server{
 		chatService: chatService,
 	}
 }

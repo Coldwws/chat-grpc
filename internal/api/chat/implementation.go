@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
+func (s *Server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
 	chatID, err := s.chatService.Create(ctx, req.Usernames)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -17,7 +17,7 @@ func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.Cre
 	return &desc.CreateResponse{Id: chatID}, nil
 }
 
-func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
+func (s *Server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.Empty, error) {
 	err := s.chatService.Delete(ctx, req.Id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -26,7 +26,7 @@ func (s *server) Delete(ctx context.Context, req *desc.DeleteRequest) (*emptypb.
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
+func (s *Server) SendMessage(ctx context.Context, req *desc.SendMessageRequest) (*emptypb.Empty, error) {
 	msg := converter.SendMessageProtoToModel(req)
 	err := s.chatService.SendMessage(ctx, msg)
 	if err != nil {
