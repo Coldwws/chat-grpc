@@ -3,6 +3,8 @@ package di
 import (
 	"context"
 	apiChat "github.com/Coldwws/chat_practice/internal/api/chat"
+	"github.com/Coldwws/chat_practice/internal/client/db"
+	"github.com/Coldwws/chat_practice/internal/client/db/pg"
 	"github.com/Coldwws/chat_practice/internal/closer"
 	"github.com/Coldwws/chat_practice/internal/config"
 	"github.com/Coldwws/chat_practice/internal/repository"
@@ -16,6 +18,8 @@ import (
 type serviceProvider struct {
 	config *config.Config
 	pgPool *pgxpool.Pool
+
+	dbClient db.Client
 
 	chatRepository repository.ChatRepository
 	chatService    service.ChatService
@@ -57,9 +61,26 @@ func (s *serviceProvider) PGPool() *pgxpool.Pool {
 	return s.pgPool
 }
 
+func (s *serviceProvider) DBClient() db.Client {
+	if s.dbClient == nil {
+		cl, err := pg.New(ctx, s.PGConfig().DSN())
+		if err != nil {
+			log.Fatalf("failed to init pg client %v", err)
+		}
+		err = cl.DB().Ping(ctx)
+		if err != nil {
+			log.Fatalf("failed to ping database %v", err.Error())
+		}
+		closer.Add(cl.Close)
+
+		s.dbClient = cl
+	}
+	return s.dbClient
+}
+
 func (s *serviceProvider) ChatRepository() repository.ChatRepository {
 	if s.chatRepository == nil {
-		s.chatRepository = chatRepo.NewRepo(s.PGPool())
+		s.chatRepository = chatRepo.NewRepo(s.DBClient())
 	}
 	return s.chatRepository
 }

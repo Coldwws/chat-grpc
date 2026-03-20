@@ -3,18 +3,18 @@ package chat
 import (
 	"context"
 	"fmt"
+	"github.com/Coldwws/chat_practice/internal/client/db"
 	"github.com/Coldwws/chat_practice/internal/model"
 	"github.com/Coldwws/chat_practice/internal/repository"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 )
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepo(db *pgxpool.Pool) repository.ChatRepository {
+func NewRepo(db db.Client) repository.ChatRepository {
 	return &repo{db: db}
 }
 
@@ -28,8 +28,10 @@ func (r *repo) Create(ctx context.Context, usernames []string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	q := db.Query{Name: "chat_repository.Create", QueryRaw: query}
 	var chatID int64
-	err = r.db.QueryRow(ctx, query, args...).Scan(&chatID)
+
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&chatID)
 	if err != nil {
 		return 0, err
 	}
@@ -43,8 +45,9 @@ func (r *repo) Create(ctx context.Context, usernames []string) (int64, error) {
 		if err != nil {
 			return 0, err
 		}
+		q2 := db.Query{Name: "chat_repository.Create", QueryRaw: queryUser}
 
-		_, err = r.db.Exec(ctx, queryUser, argsUser...)
+		_, err = r.db.DB().ExecContext(ctx, q2, argsUser...)
 		if err != nil {
 			return 0, err
 		}
@@ -61,8 +64,9 @@ func (r *repo) Delete(ctx context.Context, chatID int64) error {
 	if err != nil {
 		return err
 	}
+	q := db.Query{Name: "chat_repository.Delete", QueryRaw: query}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
@@ -85,8 +89,12 @@ func (r *repo) SendMessage(ctx context.Context, msg *model.Message) error {
 	if err != nil {
 		return err
 	}
+	q := db.Query{
+		Name:     "chat_repository.SendMessage",
+		QueryRaw: query,
+	}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	_, err = r.db.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
