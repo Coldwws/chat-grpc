@@ -15,6 +15,7 @@ type DB interface {
 	SQLExecer
 	Pinger
 	Close()
+	Transactor
 }
 
 type SQLExecer interface {
@@ -39,3 +40,15 @@ type QueryExecer interface {
 type Pinger interface {
 	Ping(ctx context.Context) error
 }
+
+// Интерфейс для работы с транзакциями.
+type Transactor interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+}
+
+// Менеджер транзакций,который выполняет указанный пользователем обработчик в транзакций.
+type TxManager interface {
+	ReadCommitted(ctx context.Context, f Handler) error
+}
+
+type Handler func(ctx context.Context) error

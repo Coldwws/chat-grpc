@@ -12,6 +12,10 @@ import (
 	"log"
 )
 
+type key string
+
+const TxKey key = "tx"
+
 type pg struct {
 	dbc *pgxpool.Pool
 }
@@ -45,11 +49,19 @@ func (p *pg) ScanOneContext(ctx context.Context, dest interface{}, q db.Query, a
 func (p *pg) QueryContext(ctx context.Context, q db.Query, args ...interface{}) (pgx.Rows, error) {
 	logQuery(ctx, q, args...)
 
+	if tx, ok := ctx.Value(TxKey).(pgx.Tx); ok {
+		return tx.Query(ctx, q.QueryRaw, args...)
+	}
+
 	return p.dbc.Query(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryRowContext(ctx context.Context, q db.Query, args ...interface{}) pgx.Row {
 	logQuery(ctx, q, args...)
+
+	if tx, ok := ctx.Value(TxKey).(pgx.Tx); ok {
+		return tx.QueryRow(ctx, q.QueryRaw, args...)
+	}
 
 	return p.dbc.QueryRow(ctx, q.QueryRaw, args...)
 }
@@ -57,6 +69,9 @@ func (p *pg) QueryRowContext(ctx context.Context, q db.Query, args ...interface{
 func (p *pg) ExecContext(ctx context.Context, q db.Query, args ...interface{}) (pgconn.CommandTag, error) {
 	logQuery(ctx, q, args...)
 
+	if tx, ok := ctx.Value(TxKey).(pgx.Tx); ok {
+		return tx.Exec(ctx, q.QueryRaw, args...)
+	}
 	return p.dbc.Exec(ctx, q.QueryRaw, args...)
 }
 
@@ -74,4 +89,8 @@ func logQuery(ctx context.Context, q db.Query, args ...interface{}) {
 		fmt.Sprintf("sql: %s", q.Name),
 		fmt.Sprintf("query: %s", prettyQuery),
 	)
+}
+
+func (p *pg) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error) {
+	return p.dbc.BeginTx(ctx, txOptions)
 }

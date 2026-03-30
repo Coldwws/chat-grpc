@@ -5,6 +5,7 @@ import (
 	apiChat "github.com/Coldwws/chat_practice/internal/api/chat"
 	"github.com/Coldwws/chat_practice/internal/client/db"
 	"github.com/Coldwws/chat_practice/internal/client/db/pg"
+	"github.com/Coldwws/chat_practice/internal/client/db/transaction"
 	"github.com/Coldwws/chat_practice/internal/closer"
 	"github.com/Coldwws/chat_practice/internal/config"
 	"github.com/Coldwws/chat_practice/internal/repository"
@@ -19,8 +20,8 @@ type serviceProvider struct {
 	config *config.Config
 	pgPool *pgxpool.Pool
 
-	dbClient db.Client
-
+	dbClient       db.Client
+	txManager      db.TxManager
 	chatRepository repository.ChatRepository
 	chatService    service.ChatService
 	chatApi        *apiChat.Server
@@ -61,7 +62,7 @@ func (s *serviceProvider) PGPool() *pgxpool.Pool {
 	return s.pgPool
 }
 
-func (s *serviceProvider) DBClient() db.Client {
+func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	if s.dbClient == nil {
 		cl, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
@@ -78,16 +79,16 @@ func (s *serviceProvider) DBClient() db.Client {
 	return s.dbClient
 }
 
-func (s *serviceProvider) ChatRepository() repository.ChatRepository {
+func (s *serviceProvider) ChatRepository(ctx context.Context) repository.ChatRepository {
 	if s.chatRepository == nil {
-		s.chatRepository = chatRepo.NewRepo(s.DBClient())
+		s.chatRepository = chatRepo.NewRepo(s.DBClient(ctx))
 	}
 	return s.chatRepository
 }
 
 func (s *serviceProvider) ChatService() service.ChatService {
 	if s.chatService == nil {
-		s.chatService = chatServ.NewChatService(s.ChatRepository())
+		s.chatService = chatServ.NewChatService(s.ChatRepository(ctx), s.TxManager(ctx))
 	}
 	return s.chatService
 }
@@ -96,4 +97,11 @@ func (s *serviceProvider) ChatAPI() *apiChat.Server {
 		s.chatApi = apiChat.NewChatServer(s.ChatService())
 	}
 	return s.chatApi
+}
+
+func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
+	if s.txManager == nil {
+		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
+	}
+	return s.txManager
 }

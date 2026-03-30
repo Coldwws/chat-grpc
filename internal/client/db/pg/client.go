@@ -3,6 +3,7 @@ package pg
 import (
 	"context"
 	"github.com/Coldwws/chat_practice/internal/client/db"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,11 @@ func New(ctx context.Context, dsn string) (db.Client, error) {
 	return &pgClient{
 		masterDBC: &pg{dbc: dbc},
 	}, nil
+
+}
+
+func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
+	return context.WithValue(ctx, TxKey, tx)
 
 }
 
