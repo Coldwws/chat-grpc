@@ -2,10 +2,11 @@ syntax = "proto3";
 
 package chat_v1;
 
-option go_package = "github.com/Coldwws/chat_practice/pkg/chat_v1; chat_v1";
+option go_package = "github.com/Coldwws/chat_practice/pkg/chat_v1;chat_v1";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "validate/validate.proto";
 
 service ChatV1 {
   rpc Create(CreateRequest)returns(CreateResponse);
@@ -14,7 +15,7 @@ service ChatV1 {
 }
 
 message CreateRequest{
-  repeated string usernames = 1;
+  repeated string usernames = 1 [(validate.rules).repeated = {min_items: 1, max_items: 10, items: {string: {min_len: 1}}}]; 
 }
 
 message CreateResponse{

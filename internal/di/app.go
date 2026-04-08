@@ -2,14 +2,16 @@ package di
 
 import (
 	"context"
+	"log"
+	"net"
+
 	"github.com/Coldwws/chat_practice/internal/config"
+	"github.com/Coldwws/chat_practice/internal/interceptor"
 	desc "github.com/Coldwws/chat_practice/pkg/chat_v1"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
 )
 
 type App struct {
@@ -66,7 +68,10 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+	)
 
 	reflection.Register(a.grpcServer)
 

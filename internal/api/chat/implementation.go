@@ -10,6 +10,8 @@ import (
 )
 
 func (s *Server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
+
+
 	chatID, err := s.chatService.Create(ctx, req.Usernames)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
