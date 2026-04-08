@@ -9,13 +9,20 @@ type Config struct {
 	Env  string
 	GRPC GRPCConfig
 	PG   PGConfig
+	Http HTTPConfig
 }
 
 func LoadConfig() Config {
+	httpConf,err := NewHTTPConfig()
+	if err != nil {
+		log.Fatalf("failed to load http config: %s", err)
+	}
+
 	return Config{
 		Env:  getEnv("ENV", "local"),
 		GRPC: LoadGRPCConfig(),
 		PG:   LoadPGConfig(),
+		Http: httpConf,
 	}
 }
 

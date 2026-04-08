@@ -6,6 +6,7 @@ install-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.35.2
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 	GOBIN=$(LOCAL_BIN) go install github.com/envoyproxy/protoc-gen-validate@v0.10.1
+	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.15.2
 
 
 get-deps:
@@ -24,6 +25,8 @@ generate-chat-api:
 	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
 	--validate_out=lang=go:pkg/chat_v1 --validate_opt=paths=source_relative \
 	--plugin=protoc-gen-validate=bin/protoc-gen-validate \
+	--grpc-gateway_out=pkg/chat_v1 --grpc-gateway_opt=paths=source_relative \
+	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	api/chat_v1/chat.proto;
 
 LOCAL_MIGRATION_DIR	:= $(MIGRATION_DIR)
@@ -52,4 +55,10 @@ vendor-proto:
 	    git clone https://github.com/envoyproxy/protoc-gen-validate vendor.protogen/protoc-gen-validate && \
 	    mv vendor.protogen/protoc-gen-validate/validate/* vendor.protogen/validate/ &&\
 	    rm -rf vendor.protogen/protoc-gen-validate ;\
+		fi
+		@if [ ! -d vendor.protogen/google ]; then \
+				git clone https://github.com/googleapis/googleapis vendor.protogen/googleapis && \
+				mkdir -p vendor.protogen/google && \
+				mv vendor.protogen/googleapis/google/api vendor.protogen/google/ && \
+				rm -rf vendor.protogen/googleapis; \
 		fi
