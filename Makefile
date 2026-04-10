@@ -15,6 +15,7 @@ get-deps:
 
 generate:
 	make generate-chat-api
+	make generate-access-api
 
 generate-chat-api:
 	mkdir -p pkg/chat_v1
@@ -28,6 +29,16 @@ generate-chat-api:
 	--grpc-gateway_out=pkg/chat_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	api/chat_v1/chat.proto;
+
+
+generate-access-api:
+	mkdir -p pkg/access_v1
+	protoc --proto_path api/access_v1 --proto_path vendor.protogen \
+	--go_out=pkg/access_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go=bin/protoc-gen-go \
+	--go-grpc_out=pkg/access_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+	api/access_v1/access.proto
 
 LOCAL_MIGRATION_DIR	:= $(MIGRATION_DIR)
 

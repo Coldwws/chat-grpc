@@ -10,6 +10,7 @@ type Config struct {
 	GRPC GRPCConfig
 	PG   PGConfig
 	Http HTTPConfig
+	Auth AuthConfig
 }
 
 func LoadConfig() Config {
@@ -23,6 +24,7 @@ func LoadConfig() Config {
 		GRPC: LoadGRPCConfig(),
 		PG:   LoadPGConfig(),
 		Http: httpConf,
+		Auth: LoadAuthConfig(),
 	}
 }
 

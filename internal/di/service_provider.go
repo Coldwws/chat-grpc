@@ -14,6 +14,7 @@ import (
 	chatServ "github.com/Coldwws/chat_practice/internal/service/chat"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
+	authClient "github.com/Coldwws/chat_practice/internal/client/auth"
 )
 
 type serviceProvider struct {
@@ -25,6 +26,7 @@ type serviceProvider struct {
 	chatRepository repository.ChatRepository
 	chatService    service.ChatService
 	chatApi        *apiChat.Server
+	authClient 		 *authClient.Client
 }
 
 func NewServiceProvider(cfg *config.Config) *serviceProvider {
@@ -104,4 +106,15 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
 	}
 	return s.txManager
+}
+
+func (s *serviceProvider) AuthClient() *authClient.Client {
+	if s.authClient == nil {
+		cl, err := authClient.NewClient(s.config.Auth.Addr)
+		if err != nil {
+			log.Fatalf("failed to init auth client: %v", err)
+		}
+		s.authClient = cl
+	}
+	return s.authClient
 }
